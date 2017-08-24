@@ -35,7 +35,7 @@
   function addClickListeners() {
     d3.select('.text-table').selectAll('tr')
       .on('click', function(d, i) {
-        window.location = '/passages/texts/' + this.dataset.filename;
+        window.location = '/passages-to-freedom/texts/' + this.dataset.filename;
       })
   }
 

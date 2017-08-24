@@ -443,7 +443,7 @@
         var card = '';
         card += '<div class="card-container" data-narrative-id=' + narrativeId + '>'
         card +=   '<div class="card">';
-        card +=     '<img src="/passages/assets/images/narrative_covers/' + narrativeId + '.jpg">';
+        card +=     '<img src="/passages-to-freedom/assets/images/narrative_covers/' + narrativeId + '.jpg">';
         card +=     '<div class="card-text">';
         card +=       '<h2 class="author">' + metadata.author + '</h2>';
         card +=       '<div class="short-title">' + metadata.shortTitle + '</div>';

@@ -89,7 +89,7 @@
 
 
       var that = this;
-      d3.json('/passages/assets/data/world.json', function (world) {
+      d3.json('/passages-to-freedom/assets/data/world.json', function (world) {
         that.globe = {type: "Sphere"},
         that.land = topojson.feature(world, world.objects.land);
       });
