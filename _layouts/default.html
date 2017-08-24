@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  {% include head.html %}
+  {% if page.class %}
+    <body class='{{ page.class }}'>
+  {% else %}
+    <body>
+  {% endif %}
+    {{ content }}
+    {% include js.html %}
+    {% if page.js %}
+      <script src='{{ page.js | prepend: site.baseurl }}'></script>
+    {% endif %}
+  </body>
+</html>

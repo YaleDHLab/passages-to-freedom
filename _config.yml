@@ -1,0 +1,8 @@
+carto_routes: table_34_routes
+carto_metadata: table_34_narratives_metadata
+baseurl: '/passages'
+sass:
+  style: compressed
+collections:
+  texts:
+    output: true
