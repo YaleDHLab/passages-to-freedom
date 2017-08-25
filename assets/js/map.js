@@ -74,7 +74,7 @@ process: true
 
   function addMapClearListeners() {
     var dragging = false,
-        container = document.querySelector('#map');
+        container = document.querySelector('#' + mapStart.targetId);
     container.addEventListener('mousedown', function() {
       dragging = false;
     })
@@ -98,7 +98,7 @@ process: true
         narrativeIdsToRemove = findNarrativeIdsToRemove();
 
     // sort the narrative ids then draw the initially visualized observations
-    sortedNarrativeIds = getSortedNarrativeIds(Object.keys(narrativeIdToPoints));
+    sortedNarrativeIds = getSortedNarrativeIds(_.keys(narrativeIdToPoints));
     sortedNarrativeIds = _.difference(sortedNarrativeIds, narrativeIdsToRemove);
     d3.json(queryRoute + metadataSqlQuery, handleMetadataJson);
     drawMapPoints();
@@ -111,7 +111,7 @@ process: true
   function findNarrativeIdsToRemove() {
     var narrativeIdsToRemove = [],
         narrativeIdToPassages = window.passages.narrativeIdToPassages;
-    Object.keys(narrativeIdToPassages).forEach(function(narrativeId) {
+    _.keys(narrativeIdToPassages).forEach(function(narrativeId) {
       var passages = narrativeIdToPassages[narrativeId],
           missingData = 0;
       for (var i=0; i<passages.length; i++) {
@@ -271,7 +271,7 @@ process: true
   *   on click of a narrative card
   **/
 
-  function activateNarrative(narrativeId, pointIdx=0) {
+  window.activateNarrative = function(narrativeId, pointIdx=0) {
     clearTimeouts();
     updateLocationButtons(narrativeId, pointIdx);
     setNarrativeTitle(narrativeId);
@@ -389,6 +389,7 @@ process: true
   **/
 
   window.focusOnPoint = function(narrativeId, pointIdx) {
+    clearTimeouts();
     pointIdx = parseInt(pointIdx);
     window.passages.focus = {narrativeId: narrativeId, pointIdx: pointIdx};
     flyToPoint(narrativeId, pointIdx);
@@ -540,6 +541,7 @@ process: true
   function handleMetadataJson(data) {
     var narrativeIdToMetadata = getNarrativeIdToMetadata(data);
     createCards(narrativeIdToMetadata);
+    createTypeahead(narrativeIdToMetadata);
   }
 
   /**
@@ -562,15 +564,15 @@ process: true
       var metadata = narrativeIdToMetadata[narrativeId],
           color = colors[narrativeIdx % colors.length];
 
-      if (metadata.img && metadata.author && metadata.shortTitle) {
+      if (narrativeMetadataComplete(metadata)) {
         var card = '';
         card += '<div class="card-container" data-narrative-id=' + narrativeId + '>';
         card +=   '<div class="card">';
         card +=     '<img src="{{ site.baseurl }}/assets/images/narrative_covers/' + narrativeId + '.jpg">';
         card +=     '<div class="card-text">';
         card +=       '<h2 class="author">' + metadata.author + '</h2>';
-        card +=       '<div class="year">' + metadata.year + '</div>';
         card +=       '<div class="short-title">' + metadata.shortTitle + '</div>';
+        card +=       '<div class="year">' + metadata.year + '</div>';
         card +=     '</div>';
         card +=     '<div class="card-dark-overlay"></div>';
         card +=   '</div>';
@@ -582,6 +584,10 @@ process: true
 
     d3.select('.cards').html(cardData);
     addCardClickListeners();
+  }
+
+  function narrativeMetadataComplete(metadata) {
+    return metadata.img && metadata.author && metadata.shortTitle;
   }
 
   /**
@@ -628,6 +634,52 @@ process: true
       var t = timeouts.pop();
       clearTimeout(t);
     }
+  }
+
+  /**
+  * Add typeahead support for the input
+  **/
+
+  function createTypeahead(narrativeIdToMetadata) {
+    var input = document.querySelector('input');
+    input.addEventListener('keyup', handleInputKeydown);
+  }
+
+  function handleInputKeydown(e) {
+    var query = e.target.value.toLowerCase(),
+        matches = [],
+        narrativeIdToMetadata = window.passages.narrativeIdToMetadata;
+
+    sortedNarrativeIds.forEach(function(narrativeId) {
+      var narrativeMetadata = narrativeIdToMetadata[narrativeId],
+          queryTitle = narrativeMetadata.shortTitle.toLowerCase(),
+          queryAuthor = narrativeMetadata.author.toLowerCase();
+      if (narrativeMetadataComplete(narrativeMetadata)) {
+        if (queryTitle.includes(query) || queryAuthor.includes(query)) {
+          matches.push({
+            title: narrativeMetadata.shortTitle,
+            narrativeId: narrativeMetadata.narrativeId,
+            author: narrativeMetadata.author
+          })
+        }
+      }
+    })
+
+    updateTypeaheadMatches(matches)
+  }
+
+  function updateTypeaheadMatches(matches) {
+    var html = '';
+
+    matches.forEach(function(match) {
+      html += '<div class="match"';
+      html += ' onmousedown="activateNarrative(' + match.narrativeId + ')">';
+      html += '  <div class="match-author">' + match.author + '</div>';
+      html += '  <div class="match-title">' + match.title + '</div>';
+      html += '</div>';
+    })
+
+    d3.select('.typeahead-matches').html(html);
   }
 
 })();

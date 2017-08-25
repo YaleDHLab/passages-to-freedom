@@ -202,6 +202,43 @@ input {
 }
 
 /**
+* Typeahead
+**/
+
+.typeahead-matches {
+  position: relative;
+  z-index: 1000;
+  background: #fff;
+  border: 1px solid lightgray;
+  font-size: 16px;
+  display: none;
+  margin-top: 8px;
+  max-height: 260px;
+  overflow: auto;
+}
+
+input:focus + .typeahead-matches {
+  display: block;
+}
+
+.typeahead-matches .match {
+  padding: 10px;
+  line-height: 1.3em;
+  cursor: pointer;
+  color: #777;
+}
+
+.typeahead-matches .match-author {
+  font-size: 18px;
+  color: #000;
+}
+
+.typeahead-matches .match-title {
+  font-size: 14px;
+  color: #999;
+}
+
+/**
 * Header
 **/
 
@@ -494,9 +531,12 @@ div.cards {
   margin: 0;
 }
 
+.card .short-title {
+  margin: 5px 0 2px;
+}
+
 .card .year {
   font-size: 12px;
-  margin: 7px 0 2px;
   color: #555;
 }
 
