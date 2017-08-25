@@ -1,6 +1,6 @@
 carto_routes: table_34_routes
 carto_metadata: table_34_narratives_metadata
-baseurl: '/passages'
+baseurl: '/passages-to-freedom'
 sass:
   style: compressed
 collections:
