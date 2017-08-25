@@ -5,14 +5,11 @@ process: true
 (function() {
 
   // initialize global map object
-  var map = L.map('map', {
-    center: [40, -75],
+  var mapStart = {
+    position: [39.75, -75.75],
     zoom: 8,
-    scrollWheelZoom: false,
-    zoomControl: true
-  });
-
-  map.zoomControl.setPosition('bottomleft');
+    targetId: 'map'
+  };
 
   // initialize global carto query params
   var mapSqlQuery = 'SELECT * FROM {{ site.carto_routes }}',
@@ -24,18 +21,31 @@ process: true
         '#67001f','#b2182b','#d6604d', '#f4a582',
         '#92c5de','#4393c3','#2166ac','#053061'
       ],
-      sortedNarrativeIds = [],  // sorted narrative ids for consistent coloring
-      activeNarrativeId = null, // narrative selected by user
-      distanceTimeout = null,   // setTimeout to compute distance between points
-      distanceSleep = 1500,     // time to wait before updating distance measures
-      jitter = .1;              // amount to jitter points
+      timeouts = [],             // timeouts running on the page
+      sortedNarrativeIds = [],   // sorted narrative ids for consistent coloring
+      activeNarrativeId = null,  // narrative selected by user
+      distanceSleep = 1500,      // time to wait before updating distance measures
+      jitter = .1;               // amount to jitter points
 
   // create global memory cache and cache the page colors
   window.passages = {
-    colors: colors
+    focus: {},
+    colors: colors,
+    getNarrativeIdMappings: getNarrativeIdMappings,
+    findNarrativeIdsToRemove: findNarrativeIdsToRemove
   }
 
-  // initialize a global minimap
+  // initialize the map
+  if (!document.querySelector('#' + mapStart.targetId)) return;
+  var map = L.map(mapStart.targetId, {
+    center: mapStart.position,
+    zoom: mapStart.zoom,
+    scrollWheelZoom: false,
+    zoomControl: true
+  });
+  map.zoomControl.setPosition('bottomleft');
+
+  // initialize a minimap
   var miniMap = new L.Control.GlobeMiniMap({}).addTo(map);
 
   // begin all subsequent transactions
@@ -55,6 +65,7 @@ process: true
 
     d3.json(queryRoute + mapSqlQuery, handleMapJson);
     addMapClearListeners();
+    addLocationButtonListeners();
   }
 
   /**
@@ -75,9 +86,7 @@ process: true
     })
 
     var clearButton = document.querySelector('.clear-selected-route');
-    clearButton.addEventListener('click', function() {
-      clearSelectedNarrative();
-    })
+    clearButton.addEventListener('click', clearSelectedNarrative)
   }
 
   /**
@@ -85,12 +94,36 @@ process: true
   **/
 
   function handleMapJson(data) {
-    var narrativeIdToPoints = getNarrativeIdToPoints(data);
+    var narrativeIdToPassages, narrativeIdToPoints = getNarrativeIdMappings(data),
+        narrativeIdsToRemove = findNarrativeIdsToRemove();
 
     // sort the narrative ids then draw the initially visualized observations
     sortedNarrativeIds = getSortedNarrativeIds(Object.keys(narrativeIdToPoints));
+    sortedNarrativeIds = _.difference(sortedNarrativeIds, narrativeIdsToRemove);
     d3.json(queryRoute + metadataSqlQuery, handleMetadataJson);
     drawMapPoints();
+  }
+
+  /**
+  * Remove narratives with missing data
+  **/
+
+  function findNarrativeIdsToRemove() {
+    var narrativeIdsToRemove = [],
+        narrativeIdToPassages = window.passages.narrativeIdToPassages;
+    Object.keys(narrativeIdToPassages).forEach(function(narrativeId) {
+      var passages = narrativeIdToPassages[narrativeId],
+          missingData = 0;
+      for (var i=0; i<passages.length; i++) {
+        if (passages[i].prior === '' || passages[i].post === '') {
+          missingData += 1;
+        }
+      }
+      if (missingData/passages.length > .3) {
+        narrativeIdsToRemove.push(narrativeId)
+      }
+    })
+    return narrativeIdsToRemove;
   }
 
   /**
@@ -103,9 +136,10 @@ process: true
       narrativeIdToMetadata[feature.properties.narrative_id] = {
         author: feature.properties.author,
         img: feature.properties.img,
-        narrativeTitle: feature.properties.title,
         narrativeId: feature.properties.narrative_id,
-        shortTitle: feature.properties.short_title
+        shortTitle: feature.properties.short_title,
+        fullTitle: feature.properties.title,
+        year: feature.properties.date_of_publication
       }
     })
 
@@ -118,7 +152,7 @@ process: true
   * points and text passages
   **/
 
-  function getNarrativeIdToPoints(data) {
+  function getNarrativeIdMappings(data) {
     var narrativeIdToPoints = {},
         narrativeIdToPassages = {},
         points = _.sortBy(data.features, function(feature) {
@@ -155,7 +189,7 @@ process: true
     // cache the data for later line drawing
     window.passages.narrativeIdToPoints = narrativeIdToPoints;
     window.passages.narrativeIdToPassages = narrativeIdToPassages;
-    return narrativeIdToPoints;
+    return narrativeIdToPassages, narrativeIdToPoints;
   }
 
   /**
@@ -173,25 +207,28 @@ process: true
   **/
 
   function drawNarrativePoints(narrativeId, narrativeIdx) {
-    window.passages.narrativeIdToPoints[narrativeId].forEach(function(point) {
-      drawPoint(point, narrativeId, narrativeIdx)
+    var narrativePoints = window.passages.narrativeIdToPoints[narrativeId];
+    narrativePoints.forEach(function(pointLatLng, pointIdx) {
+      drawPoint(pointLatLng, pointIdx, narrativeId, narrativeIdx)
     });
   }
 
-  function drawPoint(latLng, narrativeId, narrativeIdx) {
-    var circle = new L.circleMarker(latLng, {
-      className: 'map-point narrative-id-' + narrativeId + ' visible ',
-      radius: 5,
+  function drawPoint(pointLatLng, pointIdx, narrativeId, narrativeIdx) {
+    var className =  'map-point narrative-id-' + narrativeId;
+    className += ' point-index-' + narrativeIdx;
+    var circle = new L.circleMarker(pointLatLng, {
+      className: className,
+      radius: 6,
       color: colors[narrativeIdx % colors.length],
       fillColor: colors[narrativeIdx % colors.length],
       fill: true,
-      fillOpacity: 0.5,
+      fillOpacity: 0.75,
       opacity: 0.8,
     }).addTo(map);
 
     // add event listeners
     circle.on('click', function(e) {
-      toggleNarrativeState(narrativeId)
+      toggleNarrativeState(narrativeId, pointIdx);
     });
   }
 
@@ -217,13 +254,13 @@ process: true
   * Toggle the state of a given narrative
   **/
 
-  function toggleNarrativeState(narrativeId) {
+  function toggleNarrativeState(narrativeId, pointIndex=0) {
     clearSelectedNarrative();
     if (narrativeId === activeNarrativeId) {
       activeNarrativeId = null;
     } else {
       activeNarrativeId = narrativeId;
-      activateNarrative(narrativeId);
+      activateNarrative(narrativeId, pointIndex);
     }
   }
 
@@ -234,13 +271,28 @@ process: true
   *   on click of a narrative card
   **/
 
-  function activateNarrative(narrativeId) {
+  function activateNarrative(narrativeId, pointIdx=0) {
+    clearTimeouts();
+    updateLocationButtons(narrativeId, pointIdx);
+    setNarrativeTitle(narrativeId);
     darkenAllPointsExcept(narrativeId);
     displayLocationText(narrativeId);
-    scrollToNarrativeCard(narrativeId);
+    scrollToNarrativeCard(narrativeId, pointIdx);
+    d3.select('.distance').html('0');
     d3.select('.clear-selected-route').style('display', 'inline-block');
     d3.select('.distance-container').style('display', 'inline-block');
-    setTimeout(focusOnPoint.bind(null, narrativeId, 0), 500);
+    timeouts.push(setTimeout(focusOnPoint.bind(null, narrativeId, pointIdx), 500));
+  }
+
+  /**
+  * Indicate to users what narrative we're looking at
+  **/
+
+  function setNarrativeTitle(narrativeId) {
+    var metadata = window.passages.narrativeIdToMetadata[narrativeId];
+    d3.select('.selected-narrative-container').style('display', 'inline-block');
+    d3.select('.selected-narrative-title').html(metadata.shortTitle);
+    d3.select('.selected-narrative-author').html(metadata.author);
   }
 
   /**
@@ -252,9 +304,8 @@ process: true
   function darkenAllPointsExcept(narrativeId) {
     d3.selectAll('.map-point')
       .style('opacity', function(d) {
-        return d3.select(this).attr('class').includes('narrative-id-' + narrativeId + ' ') ?
-            1
-          : 0.1
+        var targetClass = 'narrative-id-' + narrativeId + ' ';
+        return d3.select(this).attr('class').includes(targetClass) ? 1 : 0.1;
       })
   }
 
@@ -273,16 +324,38 @@ process: true
       text += '<div class="passage-dash"></div>';
       text += '<div class="passage card"';
       text +=   'onclick="focusOnPoint(' + narrativeId + ',' + idx + ')">';
-      text +=     p.prior + ' <b>' + p.expressed + '</b> ' + p.post;
+      text += p.prior || p.expressed || p.post ?
+          trim(p.prior) + ' <b>' + trim(p.expressed) + '</b> ' + trim(p.post)
+        : '[No data available for this location]';
       text += '</div>';
     });
 
     elem.innerHTML = text;
   }
 
-  function scrollToNarrativeCard(narrativeId) {
-    var elem = document.querySelector("[data-narrative-id='" + narrativeId + "']");
-    document.querySelector('.cards').scrollTop = elem.offsetTop;
+  /**
+  * Trim exterior whitespace
+  **/
+
+  function trim(s) {
+    return (s || '').replace( /^\s+|\s+$/g, '');
+  }
+
+  /**
+  * Scroll to a given narrative card, then to a location card
+  **/
+
+  function scrollToNarrativeCard(narrativeId, pointIndex) {
+    pointIndex = parseInt(pointIndex);
+    var narrativeCardQuery = "[data-narrative-id='" + narrativeId + "']",
+        narrativeCard = document.querySelector(narrativeCardQuery),
+        locationCard = narrativeCard.querySelectorAll('.passage.card')[pointIndex],
+        locationCardHeight = locationCard.clientHeight,
+        container = document.querySelector('.cards');
+
+    container.scrollTop = pointIndex === 0 ?
+        narrativeCard.offsetTop
+      : locationCard.offsetTop - locationCardHeight - 30;
   }
 
   /**
@@ -290,12 +363,15 @@ process: true
   **/
 
   function clearSelectedNarrative() {
+    clearTimeouts();
+    activeNarrativeId = null;
     brightenPoints();
     d3.selectAll('.map-line').remove();
     d3.selectAll('.location-text').html('');
-    d3.select('.clear-selected-route').style('display', 'none');
     d3.select('.distance').html('0');
+    d3.select('.clear-selected-route').style('display', 'none');
     d3.select('.distance-container').style('display', 'none');
+    d3.select('.selected-narrative-container').style('display', 'none');
   }
 
   /**
@@ -312,69 +388,101 @@ process: true
   * Global callbacks for location card events
   **/
 
-  window.focusOnPoint = function(narrativeId, targetPointIdx) {
-
-    // fly to the point with idx === targetPointIdx in this narrative
-    var narrativePoints = window.passages.narrativeIdToPoints[narrativeId];
-    map.flyTo(narrativePoints[targetPointIdx], 9, {
-      animate: true,
-      duration: 1.5,
-      easeLinearity: 1
-    })
+  window.focusOnPoint = function(narrativeId, pointIdx) {
+    pointIdx = parseInt(pointIdx);
+    window.passages.focus = {narrativeId: narrativeId, pointIdx: pointIdx};
+    flyToPoint(narrativeId, pointIdx);
+    scrollLocationCards(narrativeId, pointIdx);
+    updatePercentComplete(narrativeId, pointIdx);
+    updateMilesTravelled(narrativeId, pointIdx);
+    updateLocationButtons(narrativeId, pointIdx);
 
     // darken all other points in this narrative
     d3.selectAll('.map-point.narrative-id-' + narrativeId)
       .style('opacity', function(d, i) {
-        return i === targetPointIdx ? 1 : 0.2;
+        return i === pointIdx ? 1 : 0.2;
       })
 
     // highlight the location text card we're looking at
     d3.select('.location-text.narrative-id-' + narrativeId).selectAll('.passage.card')
       .classed('active', function(d, i) {
-        return i === targetPointIdx ? true : false;
+        return i === pointIdx ? true : false;
       });
+  }
 
-    // scroll the cards so users can keep clicking through
-    if (targetPointIdx > 0) {
+  /**
+  * Fly to a point in a narrative
+  **/
+
+  function flyToPoint(narrativeId, pointIdx) {
+    var narrativePoints = window.passages.narrativeIdToPoints[narrativeId];
+    map.flyTo(narrativePoints[pointIdx], 9, {
+      animate: true,
+      duration: 1.5,
+      easeLinearity: 1
+    })
+  }
+
+  /**
+  * Scroll the location cards so users can continue clicking through
+  **/
+
+  function scrollLocationCards(narrativeId, pointIdx) {
+    if (pointIdx > 0) {
       var container = document.querySelector('.location-text.narrative-id-' + narrativeId),
-        cardHeight = container.querySelectorAll('.passage.card')[targetPointIdx].clientHeight;
-      document.querySelector('.cards').scrollTop += cardHeight + 30;
+        cardHeight = container.querySelectorAll('.passage.card')[pointIdx].clientHeight;
+      document.querySelector('.cards').scrollTop += cardHeight + 25;
     };
+  }
 
-    // update the progress bar to show how far through the narrative we've made it
-    var percentComplete = ((targetPointIdx+1)/narrativePoints.length) * 100;
-    setTimeout(function() {
+  /**
+  * Update the bar indicating how much of the journey is complete
+  **/
+
+  function updatePercentComplete(narrativeId, pointIdx) {
+    var narrativePoints = window.passages.narrativeIdToPoints[narrativeId],
+        percentComplete = ((pointIdx+1)/narrativePoints.length) * 100;
+    timeouts.push(setTimeout(function() {
       d3.select('.progress-inner').style('width', percentComplete + '%')
-    }, distanceSleep)
-
-    updateMilesTravelled(narrativeId, targetPointIdx);
+    }, distanceSleep))
   }
 
   /**
   * Compute distance travelled on journey
   **/
 
-  function updateMilesTravelled(narrativeId, targetPointIdx) {
+  function updateMilesTravelled(narrativeId, pointIdx) {
     // update the total distance travelled by this traveller
-    clearTimeout(distanceTimeout);
-    var distanceTravelled = getDistanceTravelled(narrativeId, targetPointIdx),
+    //clearTimeout(distanceTimeout);
+    var distanceTravelled = getDistanceTravelled(narrativeId, pointIdx),
         extantDistance = parseInt(d3.select('.distance').html()),
-        delta = distanceTravelled - extantDistance;
+        delta = distanceTravelled - extantDistance,
+        timeout = getTimeoutVal();
 
-    if (Math.abs(delta) > 1000) {
-      var timeout = .01;
-    } else if (Math.abs(delta) > 100) {
-      var timeout = 2;
-    } else {
-      var timeout = 20;
-    }
-
-    setTimeout(function() {
+    timeouts.push(setTimeout(function() {
       var val = delta > 0 ? 1 : -1;
       for (var i=0; i<Math.abs(delta); i++) {
-        distanceTimeout = setTimeout(updateDistanceTravelled.bind(null, distanceTravelled, val), timeout*i)
+        distanceTimeout = timeouts.push(setTimeout(
+          updateDistanceTravelled.bind(null, distanceTravelled, val), timeout*i
+        ))
       }
-    }, distanceSleep)
+    }, distanceSleep))
+  }
+
+  /**
+  * Determine the timeout to use for distance travelled animations
+  **/
+
+  function getTimeoutVal(delta) {
+    if (Math.abs(delta) > 10000) {
+      return .0001;
+    } else if (Math.abs(delta) > 1000) {
+      return .001;
+    } else if (Math.abs(delta) > 100) {
+      return 2;
+    } else {
+      return 20;
+    }
   }
 
   /**
@@ -396,11 +504,11 @@ process: true
     return dist;
   }
 
-  function getDistanceTravelled(narrativeId, narrativeIdx) {
+  function getDistanceTravelled(narrativeId, pointIdx) {
     var distance = 0,
         narrativePoints = window.passages.narrativeIdToPoints[narrativeId.toString()];
-    if (narrativeIdx === 0) return 0;
-    for (var i=1; i<narrativeIdx+1; i++) {
+    if (pointIdx === 0) return 0;
+    for (var i=1; i<pointIdx+1; i++) {
       var one = narrativePoints[i],
           two = narrativePoints[i-1];
       distance += distanceBetweenPoints(one.lat, one.lng, two.lat, two.lng);
@@ -409,9 +517,20 @@ process: true
   }
 
   function updateDistanceTravelled(distanceTravelled, val) {
-    console.log(val)
     var extantDistance = parseInt(d3.select('.distance').html());
     d3.select('.distance').html(extantDistance+val);
+  }
+
+  /**
+  * Update the state of the next and previous location buttons
+  **/
+
+  function updateLocationButtons(narrativeId, pointIdx) {
+    var narrativePoints = window.passages.narrativeIdToPoints[narrativeId];
+    var previousDisabled = pointIdx === 0 ? true : false;
+    var nextDisabled = pointIdx+1 === narrativePoints.length ? true : false;
+    d3.select('.previous-location').classed('disabled', previousDisabled);
+    d3.select('.next-location').classed('disabled', nextDisabled);
   }
 
   /**
@@ -445,11 +564,12 @@ process: true
 
       if (metadata.img && metadata.author && metadata.shortTitle) {
         var card = '';
-        card += '<div class="card-container" data-narrative-id=' + narrativeId + '>'
+        card += '<div class="card-container" data-narrative-id=' + narrativeId + '>';
         card +=   '<div class="card">';
         card +=     '<img src="{{ site.baseurl }}/assets/images/narrative_covers/' + narrativeId + '.jpg">';
         card +=     '<div class="card-text">';
         card +=       '<h2 class="author">' + metadata.author + '</h2>';
+        card +=       '<div class="year">' + metadata.year + '</div>';
         card +=       '<div class="short-title">' + metadata.shortTitle + '</div>';
         card +=     '</div>';
         card +=     '<div class="card-dark-overlay"></div>';
@@ -469,10 +589,45 @@ process: true
   **/
 
   function addCardClickListeners() {
-    d3.selectAll('.card')
-      .on('click', function(d, i) {
-        toggleNarrativeState(this.parentNode.dataset.narrativeId)
-      })
+    d3.selectAll('.card').on('click', function(d, i) {
+      toggleNarrativeState(this.parentNode.dataset.narrativeId)
+    })
+  }
+
+  /**
+  * Callbacks for buttons that allow users to page through location cards
+  **/
+
+  function addLocationButtonListeners() {
+    var previousButton = document.querySelector('.previous-location'),
+        nextButton = document.querySelector('.next-location');
+    previousButton.addEventListener('mousedown', decrementPointIndex)
+    nextButton.addEventListener('mousedown', incrementPointIndex)
+  }
+
+  function decrementPointIndex(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    var focus = window.passages.focus;
+    focusOnPoint(focus.narrativeId, focus.pointIdx-1);
+  }
+
+  function incrementPointIndex(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    var focus = window.passages.focus;
+    focusOnPoint(focus.narrativeId, focus.pointIdx+1);
+  }
+
+  /**
+  * Helper to clear all active timeouts
+  **/
+
+  function clearTimeouts() {
+    while (timeouts.length) {
+      var t = timeouts.pop();
+      clearTimeout(t);
+    }
   }
 
 })();

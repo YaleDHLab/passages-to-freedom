@@ -299,14 +299,32 @@ path {
   transition: opacity 0.3s;
 }
 
+/**
+* Map overlay elements
+**/
+
 .clear-selected-route,
-.distance-container {
+.distance-container,
+.selected-narrative-container {
   position: absolute;
   z-index: 1000;
-  top: 20px;
 }
 
+.distance-container,
+.selected-narrative-container {
+  color: $bold_color;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.7);
+  text-align: center;
+  display: none;
+}
+
+/**
+* Clear selected narrative button
+**/
+
 .clear-selected-route {
+  top: 20px;
   left: 20px;
   padding: 8px 18px;
   font-size: 15px;
@@ -317,13 +335,13 @@ path {
   color: #fff;
 }
 
+/**
+* Distance travelled integer
+**/
+
 .distance-container {
+  top: 20px;
   right: 20px;
-  color: $bold_color;
-  padding: 10px;
-  background: rgba(255, 255, 255, 0.7);
-  text-align: center;
-  display: none;
 }
 
 .distance-container .distance {
@@ -335,6 +353,39 @@ path {
 .distance-label {
   color: #555;
 }
+
+/**
+* Selected narrative details
+**/
+
+.selected-narrative-container {
+  bottom: 23px;
+  left: 50%;
+  width: 500px;
+  margin-left: -270px;
+}
+
+.selected-narrative-title {
+  font-size: 13px;
+  color: #555;
+  margin-bottom: 7px;
+  width: 500px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  padding: 0 40px;
+  box-sizing: border-box;
+}
+
+.selected-narrative-author {
+  font-size: 20px;
+  line-height: 20px;
+  margin-bottom: 3px;
+}
+
+/**
+* Progress bar
+**/
 
 .progress-outer {
   display: block;
@@ -351,12 +402,56 @@ path {
 }
 
 /**
+* Next and previous location buttons
+**/
+
+.caret-button {
+  position: absolute;
+  background-image: url(/passages-to-freedom/assets/images/caret.png);
+  background-size: 22px;
+  background-position: 50%;
+  background-repeat: no-repeat;
+  width: 35px;
+  height: 100%;
+  z-index: 1000;
+  top: 0;
+  padding: 20px;
+  box-sizing: border-box;
+  background-color: #fff;
+  opacity: 0.7;
+  cursor: pointer;
+}
+
+.caret-button.previous-location {
+  left: -45px;
+  transform: rotate(0deg);
+}
+
+.caret-button.next-location {
+  right: -45px;
+  transform: rotate(180deg);
+}
+
+.caret-button.disabled {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/**
 * Map point states
 **/
 
 .map-point.hidden {
   display: none;
   pointer-events: none;
+}
+
+/**
+* Leaflet overrides
+**/
+
+.leaflet-control-attribution.leaflet-control {
+  font-size: 8px;
 }
 
 /**
@@ -399,6 +494,12 @@ div.cards {
   margin: 0;
 }
 
+.card .year {
+  font-size: 12px;
+  margin: 7px 0 2px;
+  color: #555;
+}
+
 .card img {
   width: 20%;
   max-width: 90px;
@@ -414,8 +515,7 @@ div.cards {
 .card.passage {
   color: #525151;
   font-weight: 100;
-  font-size: 13px;
-  padding-top: 3px;
+  font-size: .95em;
 }
 
 .cards.dark .card-dark-overlay {
@@ -433,7 +533,6 @@ div.cards {
 
 .card.passage {
   min-height: initial;
-  font-size: 14px;
   font-size: .95em;
   cursor: pointer;
 }
@@ -487,16 +586,6 @@ footer img {
 
   div.map {
     left: 20%;
-  }
-}
-
-/**
-* Medium viewports
-**/
-
-@media(max-width: 1100px) {
-  .input-container {
-    width: 330px;
   }
 }
 

@@ -2,13 +2,16 @@
 process: true
 ---
 (function() {
-  var metadataSqlQuery = 'SELECT * FROM {{ site.carto_metadata }}';
+  var metadataSqlQuery = 'SELECT * FROM {{ site.carto_routes }}';
       queryRoute = 'https://gravistar.carto.com/api/v2/sql?format=GeoJSON&q=';
 
   d3.json(queryRoute + metadataSqlQuery, handleData);
 
   function handleData(data) {
-    var count = data.features.length;
+    var narrativeIdToPassages, _ = window.passages.getNarrativeIdMappings(data);
+    var incomplete = window.passages.findNarrativeIdsToRemove(),
+        narratives = Object.keys(window.passages.narrativeIdToPassages),
+        count = narratives.length - incomplete.length;
     for (var i=0; i<count; i++) {
       window.setTimeout(updateCount.bind(null, i), 20*i)
     }
