@@ -25,7 +25,7 @@ process: true
           row = '<tr data-filename=' + filename + '>',
           cover = '<img src=' + img + '>';
 
-      if (cover, author, title, pubdate) {
+      if (img && author && title && pubdate) {
         [cover, author, title, pubdate].forEach(function(field) {
           row += '<td>' + field + '</td>';
         })

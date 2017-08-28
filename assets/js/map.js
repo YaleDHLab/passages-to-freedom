@@ -393,7 +393,7 @@ process: true
     pointIdx = parseInt(pointIdx);
     window.passages.focus = {narrativeId: narrativeId, pointIdx: pointIdx};
     flyToPoint(narrativeId, pointIdx);
-    scrollLocationCards(narrativeId, pointIdx);
+    scrollToNarrativeCard(narrativeId, pointIdx);
     updatePercentComplete(narrativeId, pointIdx);
     updateMilesTravelled(narrativeId, pointIdx);
     updateLocationButtons(narrativeId, pointIdx);
@@ -422,18 +422,6 @@ process: true
       duration: 1.5,
       easeLinearity: 1
     })
-  }
-
-  /**
-  * Scroll the location cards so users can continue clicking through
-  **/
-
-  function scrollLocationCards(narrativeId, pointIdx) {
-    if (pointIdx > 0) {
-      var container = document.querySelector('.location-text.narrative-id-' + narrativeId),
-        cardHeight = container.querySelectorAll('.passage.card')[pointIdx].clientHeight;
-      document.querySelector('.cards').scrollTop += cardHeight + 25;
-    };
   }
 
   /**

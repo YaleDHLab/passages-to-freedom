@@ -6,6 +6,8 @@ $light_color: #76abc5;
 $dark_color: #3a667b;
 $bold_color: #b2182b;
 
+$serif: 'Zilla Slab', serif;
+
 * {
   margin: 0;
   padding: 0;
@@ -28,13 +30,13 @@ body {
 **/
 
 h1 {
-  font-family: 'Playfair Display', serif;
+  font-family: $serif;
   margin: 80px auto 24px;
   text-align: center;
 }
 
 h2 {
-  font-family: 'Playfair Display', serif;
+  font-family: $serif;
   font-weight: 400;
   letter-spacing: 0.01em;
 }
@@ -147,6 +149,14 @@ table.text-table th,
 table.text-table td {
   vertical-align: top;
   padding: 12px 15px;
+}
+
+table.text-table th {
+  text-align: left;
+}
+
+table.text-table th.title {
+  text-align: center;
 }
 
 table.text-table td:last-child {
@@ -309,7 +319,7 @@ header .links a:hover {
 * Map
 **/
 
-div.map-container {
+.map-container {
   position: absolute;
   top: 140px;
   right: 0px;
@@ -318,7 +328,7 @@ div.map-container {
   overflow: auto;
 }
 
-div.map {
+.map {
   position: fixed;
   right: 0;
   bottom: 34px;
@@ -418,6 +428,7 @@ path {
   font-size: 20px;
   line-height: 20px;
   margin-bottom: 3px;
+  font-family: $serif;
 }
 
 /**
@@ -495,7 +506,7 @@ path {
 * Cards
 **/
 
-div.cards {
+.cards {
   width: 30%;
   height: 100%;
   background: #efefef;
@@ -532,7 +543,7 @@ div.cards {
 }
 
 .card .short-title {
-  margin: 5px 0 2px;
+  margin: 3px 0 2px;
 }
 
 .card .year {
@@ -619,12 +630,12 @@ footer img {
 **/
 
 @media(min-width: 1600px) {
-  div.cards,
+  .cards,
   .input-container {
     width: 20%;
   }
 
-  div.map {
+  .map {
     left: 20%;
   }
 }
@@ -632,6 +643,24 @@ footer img {
 /**
 * Smaller viewports
 **/
+
+@media(max-width: 900px) {
+  .card img {
+    display: none;
+  }
+
+  .card .card-text {
+    padding-left: 0;
+  }
+
+  .cards {
+    width: 50%;
+  }
+
+  .map {
+    left: 50%;
+  }
+}
 
 @media(max-width: 700px) {
 
