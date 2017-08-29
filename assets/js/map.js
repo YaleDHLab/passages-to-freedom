@@ -465,36 +465,28 @@ process: true
   **/
 
   function updateMilesTravelled(narrativeId, pointIdx) {
-    // update the total distance travelled by this traveller
     var distanceTravelled = getDistanceTravelled(narrativeId, pointIdx),
         extantDistance = parseInt(d3.select('.distance').html()),
-        delta = distanceTravelled - extantDistance,
-        timeout = getTimeoutVal();
+        delta = distanceTravelled - extantDistance;
+
+    if (Math.abs(delta) > 1000) {
+      var cycles = 1000;
+    } else if (Math.abs(delta) > 500) {
+      var cycles = 500;
+    } else if (Math.abs(delta) > 100) {
+      var cycles = 100;
+    } else {
+      var cycles = 50;
+    }
 
     timeouts.push(setTimeout(function() {
-      var val = delta > 0 ? 1 : -1;
-      for (var i=0; i<Math.abs(delta); i++) {
+      var val = delta/cycles;
+      _.times(cycles, function(i) {
         timeouts.push(setTimeout(
-          updateDistanceTravelled.bind(null, distanceTravelled, val), timeout*i
+          updateDistanceTravelled.bind(null, distanceTravelled, val), i
         ))
-      }
+      })
     }, sleepDuration))
-  }
-
-  /**
-  * Determine the timeout to use for distance travelled animations
-  **/
-
-  function getTimeoutVal(delta) {
-    if (Math.abs(delta) > 10000) {
-      return .0001;
-    } else if (Math.abs(delta) > 1000) {
-      return .001;
-    } else if (Math.abs(delta) > 100) {
-      return 2;
-    } else {
-      return 20;
-    }
   }
 
   /**
@@ -528,9 +520,10 @@ process: true
     return distance;
   }
 
-  function updateDistanceTravelled(distanceTravelled, val) {
-    var extantDistance = parseInt(d3.select('.distance').html());
-    d3.select('.distance').html(extantDistance+val);
+  function updateDistanceTravelled(totalGoal, val) {
+    var extantVal = parseFloat(d3.select('.distance')[0][0].dataset.distance) || 0;
+    d3.select('.distance').html( parseInt(extantVal+val) );
+    d3.select('.distance')[0][0].dataset.distance = extantVal+val;
   }
 
   /**

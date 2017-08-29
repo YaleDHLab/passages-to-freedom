@@ -437,7 +437,7 @@ path {
 }
 
 .selected-narrative-title {
-  font-size: 13px;
+  font-size: 15px;
   color: #555;
   margin-bottom: 7px;
   width: 500px;
@@ -446,12 +446,13 @@ path {
   overflow: hidden;
   padding: 0 40px;
   box-sizing: border-box;
+  font-family: 'Open Sans';
+  font-weight: 400;
 }
 
 .selected-narrative-author {
   font-size: 20px;
   line-height: 20px;
-  margin-bottom: 3px;
   font-family: $serif;
 }
 
