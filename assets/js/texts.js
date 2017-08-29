@@ -1,6 +1,8 @@
 (function() {
 
-  var metadataSqlQuery = 'SELECT * FROM table_34_narratives_metadata',
+  if (!document.querySelector('.text-table')) return;
+
+  var metadataSqlQuery = 'SELECT * FROM table_34_reordered_metadata',
       queryRoute = 'https://gravistar.carto.com/api/v2/sql?format=GeoJSON&q=';
 
   d3.json(queryRoute + metadataSqlQuery, handleMetadataJson);
@@ -35,7 +37,8 @@
   function addClickListeners() {
     d3.select('.text-table').selectAll('tr')
       .on('click', function(d, i) {
-        window.location = '/passages-to-freedom/texts/' + this.dataset.filename;
+        var textPath = this.dataset.filename.replace('.xml', '.html');
+        window.location = '/passages-to-freedom/texts/' + textPath;
       })
   }
 
