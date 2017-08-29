@@ -392,6 +392,7 @@
     d3.select('.clear-selected-route').style('display', 'none');
     d3.select('.distance-container').style('display', 'none');
     d3.select('.selected-narrative-container').style('display', 'none');
+    d3.select('.distance')[0][0].dataset.distance = 0;
   }
 
   /**
