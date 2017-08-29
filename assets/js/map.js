@@ -55,7 +55,7 @@
     L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_nolabels/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a> | <a href="https://github.com/yaledhlab">&hearts; YaleDH</a>',
       subdomains: 'abcd',
-      minZoom: 6,
+      minZoom: 3,
       maxZoom: 12
     }).addTo(map);
 
@@ -389,7 +389,7 @@
     pointIdx = parseInt(pointIdx);
     window.passages.focus = {narrativeId: narrativeId, pointIdx: pointIdx};
     flyToPoint(narrativeId, pointIdx);
-    scrollLocationCards(narrativeId, pointIdx);
+    scrollToNarrativeCard(narrativeId, pointIdx);
     updatePercentComplete(narrativeId, pointIdx);
     updateMilesTravelled(narrativeId, pointIdx);
     updateLocationButtons(narrativeId, pointIdx);
@@ -418,18 +418,6 @@
       duration: 1.5,
       easeLinearity: 1
     })
-  }
-
-  /**
-  * Scroll the location cards so users can continue clicking through
-  **/
-
-  function scrollLocationCards(narrativeId, pointIdx) {
-    if (pointIdx > 0) {
-      var container = document.querySelector('.location-text.narrative-id-' + narrativeId),
-        cardHeight = container.querySelectorAll('.passage.card')[pointIdx].clientHeight;
-      document.querySelector('.cards').scrollTop += cardHeight + 25;
-    };
   }
 
   /**
