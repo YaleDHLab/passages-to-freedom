@@ -33,6 +33,7 @@ h1 {
   font-family: $serif;
   margin: 80px auto 24px;
   text-align: center;
+  font-size: 33px;
 }
 
 h2 {
@@ -48,6 +49,24 @@ p {
 
 .center-text {
   text-align: center;
+}
+
+/**
+* Container
+**/
+
+div.container {
+  min-height: 100%;
+  min-height: 100vh;
+}
+
+/**
+* Selects
+**/
+
+div.selects {
+  height: 56px;
+  background: #efefef;
 }
 
 /**
@@ -168,22 +187,27 @@ table.text-table tbody {
 }
 
 /**
-* Container
+* Text page
 **/
 
-
-div.container {
-  min-height: 100%;
-  min-height: 100vh;
+.text-page.text-slab {
+  padding: 80px 20px 80px;
 }
 
-/**
-* Selects
-**/
+.text-page.text-slab h1 {
+  font-size: 1em;
+  margin: 10px 0 20px;
+  font-weight: 400;
+  text-align: left;
+}
 
-div.selects {
-  height: 56px;
-  background: #efefef;
+.text-page.text-slab h1:first-of-type {
+  font-size: 24px;
+  text-align: center;
+}
+
+.text-page :target {
+  background-color: $light_color ;
 }
 
 /**
@@ -597,6 +621,19 @@ path {
   width: 1px;
   border-right: 2px solid #b8b8b8;
   margin: -3px auto 4px;
+}
+
+.card.passage a {
+  text-decoration: none;
+  color: #666;
+}
+
+.card.passage img {
+  border: none;
+  float: right;
+  position: relative;
+  bottom: -6px;
+  width: 18px;
 }
 
 /**
