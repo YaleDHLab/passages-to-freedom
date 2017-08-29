@@ -9,7 +9,13 @@
     {{ content }}
     {% include js.html %}
     {% if page.js %}
-      <script src='{{ page.js | prepend: site.baseurl }}'></script>
+      {% if page.js.first %}
+        {% for js in page.js %}
+          <script src='{{ js | prepend: site.baseurl }}'></script>
+        {% endfor %}
+      {% else %}
+        <script src='{{ page.js | prepend: site.baseurl }}'></script>
+      {% endif %}
     {% endif %}
   </body>
 </html>

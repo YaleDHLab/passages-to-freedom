@@ -7,11 +7,9 @@ query += '%20'.join(select.split())
 request = urllib2.urlopen(query)
 j = json.loads(request.read())
 for i in j['features']:
-  print(i.keys())
   try:
     img = i['properties']['img']
     text_id = i['properties']['narrative_id']
-    os.system('wget ' + img + ' -O ' + '../assets/images/narrative_covers/' + str(text_id) + '.jpg')
+    os.system('wget ' + img + ' -O ' + 'assets/images/narrative_covers/' + str(text_id) + '.jpg')
   except KeyError:
     pass
-
