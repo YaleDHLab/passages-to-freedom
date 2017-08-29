@@ -1,7 +1,10 @@
 ---
 process: true
 ---
+
 (function() {
+
+  if (!document.querySelector('.text-table')) return;
 
   var metadataSqlQuery = 'SELECT * FROM {{ site.carto_metadata }}',
       queryRoute = 'https://gravistar.carto.com/api/v2/sql?format=GeoJSON&q=';
@@ -38,7 +41,8 @@ process: true
   function addClickListeners() {
     d3.select('.text-table').selectAll('tr')
       .on('click', function(d, i) {
-        window.location = '{{ site.baseurl }}/texts/' + this.dataset.filename;
+        var textPath = this.dataset.filename.replace('.xml', '.html');
+        window.location = '{{ site.baseurl }}/texts/' + textPath;
       })
   }
 

@@ -4,4 +4,7 @@
   <link rel='stylesheet' type='text/css' href='https://unpkg.com/leaflet@1.0.3/dist/leaflet.css' />
   <link rel='stylesheet' type='text/css' href='{{ site.baseurl }}/assets/css/style.css'>
   <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Open+Sans:100,300,600|Zilla+Slab:400|Tulpen+One'>
+  {% if page.css %}
+    <link rel='stylesheet' type='text/css' href='{{ page.css | prepend: site.baseurl }}'>
+  {% endif %}
 </head>

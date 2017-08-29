@@ -24,7 +24,7 @@ process: true
       timeouts = [],             // timeouts running on the page
       sortedNarrativeIds = [],   // sorted narrative ids for consistent coloring
       activeNarrativeId = null,  // narrative selected by user
-      distanceSleep = 1500,      // time to wait before updating distance measures
+      sleepDuration = 1500,      // time to wait before updating distance measures
       jitter = .1;               // amount to jitter points
 
   // create global memory cache and cache the page colors
@@ -139,7 +139,8 @@ process: true
         narrativeId: feature.properties.narrative_id,
         shortTitle: feature.properties.short_title,
         fullTitle: feature.properties.title,
-        year: feature.properties.date_of_publication
+        year: feature.properties.date_of_publication,
+        filename: feature.properties.filename
       }
     })
 
@@ -164,7 +165,8 @@ process: true
         var passage = {
           prior: feature.properties.placename_prior,
           expressed: feature.properties.placename_expressed,
-          post: feature.properties.placename_post
+          post: feature.properties.placename_post,
+          cartodb_id: feature.properties.cartodb_id
         }
 
         var coordinates = feature.geometry.coordinates,
@@ -324,13 +326,35 @@ process: true
       text += '<div class="passage-dash"></div>';
       text += '<div class="passage card"';
       text +=   'onclick="focusOnPoint(' + narrativeId + ',' + idx + ')">';
-      text += p.prior || p.expressed || p.post ?
-          trim(p.prior) + ' <b>' + trim(p.expressed) + '</b> ' + trim(p.post)
-        : '[No data available for this location]';
+      text +=   getPassageText(p)
+      text += '<a href="' + getPassageHref(narrativeId, p) + '" target="_blank">';
+      text += '  <img src="{{ site.baseurl }}/assets/images/glasses.svg">';
+      text += '</a>';
       text += '</div>';
     });
 
     elem.innerHTML = text;
+  }
+
+  /**
+  * Given a narrative id and a passage object, get the deeplink to that passage
+  **/
+
+  function getPassageHref(narrativeId, p) {
+    var filename = window.passages.narrativeIdToMetadata[narrativeId].filename;
+    var url = '{{ site.baseurl }}/texts/' + filename.replace('.xml', '.html');
+    url += '#cartodb_id_' + p.cartodb_id;
+    return url;
+  }
+
+  /**
+  * Parse out the text to display for a passage object
+  **/
+
+  function getPassageText(p) {
+    return p.prior || p.expressed || p.post ?
+      trim(p.prior) + ' <b>' + trim(p.expressed) + '</b> ' + trim(p.post)
+    : '[No data available for this location]';
   }
 
   /**
@@ -433,7 +457,7 @@ process: true
         percentComplete = ((pointIdx+1)/narrativePoints.length) * 100;
     timeouts.push(setTimeout(function() {
       d3.select('.progress-inner').style('width', percentComplete + '%')
-    }, distanceSleep))
+    }, sleepDuration))
   }
 
   /**
@@ -442,7 +466,6 @@ process: true
 
   function updateMilesTravelled(narrativeId, pointIdx) {
     // update the total distance travelled by this traveller
-    //clearTimeout(distanceTimeout);
     var distanceTravelled = getDistanceTravelled(narrativeId, pointIdx),
         extantDistance = parseInt(d3.select('.distance').html()),
         delta = distanceTravelled - extantDistance,
@@ -451,11 +474,11 @@ process: true
     timeouts.push(setTimeout(function() {
       var val = delta > 0 ? 1 : -1;
       for (var i=0; i<Math.abs(delta); i++) {
-        distanceTimeout = timeouts.push(setTimeout(
+        timeouts.push(setTimeout(
           updateDistanceTravelled.bind(null, distanceTravelled, val), timeout*i
         ))
       }
-    }, distanceSleep))
+    }, sleepDuration))
   }
 
   /**
@@ -562,7 +585,6 @@ process: true
         card +=       '<div class="short-title">' + metadata.shortTitle + '</div>';
         card +=       '<div class="year">' + metadata.year + '</div>';
         card +=     '</div>';
-        card +=     '<div class="card-dark-overlay"></div>';
         card +=   '</div>';
         card +=   '<div class="location-text narrative-id-' + narrativeId + '"></div>';
         card += '</div>';
