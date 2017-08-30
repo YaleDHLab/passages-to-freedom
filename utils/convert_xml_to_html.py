@@ -3,7 +3,7 @@ from collections import defaultdict
 from difflib import SequenceMatcher
 from bs4 import BeautifulSoup, NavigableString
 from nltk import ngrams
-import glob, os, urllib2, codecs, json
+import glob, os, urllib2, codecs, json, yaml
 
 # built for python 2.7
 
@@ -209,12 +209,12 @@ def get_narrative_json():
   d = defaultdict(list)
   narrative_id_to_filename = {}
 
-  metadata_json = get_carto_json('table_34_narratives_metadata')
+  metadata_json = get_carto_json(metadata_table)
   for i in metadata_json['features']:
     props = i['properties']
     narrative_id_to_filename[ props['narrative_id'] ] = props['filename']
 
-  route_json = get_carto_json('table_34_routes')
+  route_json = get_carto_json(routes_table)
   for i in route_json['features']:
     props = i['properties']
     if (not props['latitude']) or (not props['longitude']):
@@ -253,6 +253,11 @@ def add_jekyll_frontmatter(_html):
   return html
 
 if __name__ == '__main__':
+  with open('_config.yml') as f:
+    config = yaml.load(f.read())
+    routes_table = config['carto_routes']
+    metadata_table = config['carto_metadata']
+
   make_outdir()
   carto_root = 'https://gravistar.carto.com/api/v2/sql?format=GeoJSON&q=SELECT * FROM '
   narrative_json = get_narrative_json()
