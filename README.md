@@ -32,7 +32,7 @@ brew install wget && wget https://s3-us-west-2.amazonaws.com/lab-apps/passages-t
 tar -zxf assets/data/xml.tar.gz && mv xml assets/data/ && rm assets/data/xml.tar.gz
 
 # install python requirements
-pip install -r utils/requirements.txt
+pip install -r utils/requirements.txt --user
 
 # process xml data (python 2.7)
 python utils/convert_xml_to_html.py
@@ -126,11 +126,6 @@ git pull origin master
 # to check which branch you're on and see what kinds of changed and unchanged files you have
 git status
 
-# to make git ignore the ruby version file
-sublime .
-
-add '.ruby-version' to .gitignore file and hit save.
-
 # check all changes and deletions among files
 git diff
 
@@ -212,4 +207,12 @@ git checkout .
 # to add a directory and all subdirectories to the staging area 
 
 git add .
+
+# to open sublime 
+sublime .
+
+# to review history to see what you changes
+
+git log
+
 ```
