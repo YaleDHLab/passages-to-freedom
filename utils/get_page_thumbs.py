@@ -1,7 +1,10 @@
-import urllib2, codecs, json, os
+import urllib2, codecs, json, os, yaml 
+
+with open('_config.yml') as f:
+	config = yaml.load(f)
 
 query = 'https://gravistar.carto.com/api/v2/sql?format=GeoJSON&q='
-select = 'SELECT * FROM table_34_narratives_metadata'
+select = 'SELECT * FROM ' + config['carto_metadata']
 query += '%20'.join(select.split())
 
 request = urllib2.urlopen(query)
