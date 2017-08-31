@@ -115,45 +115,36 @@ sublime .
 # preview the changes to make sure everything looks good/runs
 ```
 
-## how to commit changes to master branch and push changes to ghpages branch
-
-# branch switching
+## commit changes to master branch, push changes to ghpages branch
 ```
+# branch switching
 git checkout {BRANCHNAME}
 
 # pull from master to make sure local master is up-to-date with remote master
-
 git pull origin master
 
 # to check which branch you're on and see what kinds of changed and unchanged files you have
-
 git status
 
 # to make git ignore the ruby version file
-
 sublime .
 
 add '.ruby-version' to .gitignore file and hit save.
 
 # check all changes and deletions among files
-
 git diff
 
 # add file to staging area
-
 git add {filename}
 
 # remove file from staging area
-
 git reset {filename}
 
 # commit everything in staging area to git repository and write a commit message (in quotation marks)
-
 git commit -m "{MESSAGE}"
 
 # associate machine with github account and username
-
- git config --global --edit
+git config --global --edit
  
 # press 'escape' key and then the 'i' key to enter insert mode
  
@@ -162,73 +153,58 @@ git commit -m "{MESSAGE}"
 # to escape, press 'escape' key followed by ':qw' and press enter
 
 # second step of connecting local git to github user
-
 git commit --amend --reset-author
 
 # then 'escape' plus ':wq'
 
 # create a new branch to isolate changes
-
 git checkout -b {NEWBRANCHNAME}
 
 # push branch up to github
-
 git push origin {NEWBRANCHNAME}
 
 # merge new branch with github version of master branch
-
-Do this through github's graphical interface
+do this through github's graphical interface
 
 # switch to local master branch
-
 git checkout master
 
 # fast-forward local copy of master to remote master
-
 git pull origin master
 
 # build a site folder on desktop
-
 bundle exec jekyll build 
 
 # push updated master branch onto gh-pages
-
 git checkout master
 
 # to copy contents of _site directory to desktop
-
 cp -r _site ~/desktop
 
 # switch to gh-pages branch
-
 git checkout gh-pages
 
 # delete all of contents within passages-to-freedom
-
 manually delete all subdirectories in directory
 
 # copy everything in _site folder to passages-to-freedom
-
 cp -r ~/desktop/_site/* .
 
 # add local gh-pages content to staging area
-
 git add .
 
 # commit files in staging area
-
 git commit -m "{MESSAGE}"
 
 # push local gh-pages up to remote gh-pages
-
 git push origin gh-pages
 
 # if there is a merge conflict, resolve the merge conflict. Usually, if there's a merge conflict, you'll receive a message like: "CONFLICT (modify/delete): utils/convert_xml_to_html.py deleted in HEAD and modified in 3bc4655d97bb1f0ed28ad1659b9bceeba791dbb7. Version 3bc4655d97bb1f0ed28ad1659b9bceeba791dbb7 of utils/convert_xml_to_html.py left in tree." The general solution is to open the file in some text editor and look for '>>>' and compare the two versions and then make the file look how you want it to look.
-
 git pull origin {BRANCHNAME}
+```
 
 ## helpful Git commands
-
+```
 # to restore a directory and all subdirectories that have been deleted
 
 git checkout .
@@ -236,4 +212,4 @@ git checkout .
 # to add a directory and all subdirectories to the staging area 
 
 git add .
-
+```
