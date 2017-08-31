@@ -56,6 +56,8 @@ def make_outdir():
   '''
   @args: none
   @returns: none
+
+  Generate the directory in which all output files will be saved
   '''
   if not os.path.exists('_texts'):
     os.makedirs('_texts')
@@ -64,6 +66,8 @@ def remove_tags(soup):
   '''
   @args: a soup object
   @returns: a soup object without tags to remove
+
+  Remove unnecessary tags from all narartives
   '''
   for tag in tags_to_remove:
     if tag['attr']:
@@ -76,6 +80,9 @@ def convert_tags(soup):
   '''
   @args: a soup object
   @returns: a soup object with all tags converted to target html tags
+
+  Convert all XML tags specified in the tag_map to their specified HTML
+  tags, and convert all XML tags that are not in the tag_map to spans
   '''    
   for tag_map in tag_maps:
     tag = tag_map['tag']
@@ -97,7 +104,11 @@ def convert_tags(soup):
 def annotate_locations(xml_filename, html):
   '''
   @args: an html string
-  @returns: an html string with location references annotated 
+  @returns: an html string with location references annotated
+
+  Attempt to identify the location of each passages in the given narrative,
+  and log any failures (due either to lack of string similarity or problems
+  with nested html tags)
   '''
   for i in narrative_json[xml_filename]:
  
@@ -126,11 +137,14 @@ def replace_html(html, passage, cartodb_id, xml_filename, sim_type):
     html {str}: an html string
     passage {str}: a passage in the xml to be wrapped by tags
     cartodb_id {int}: an integer for a cartodb item id
+    xml_filename {str}: a string containing the current file's xml name
     sim_type: {str}: a string indicating whether this is direct/indrect similarity
   @returns:
     {str} the html string with passages wrapped by spans
-  '''
 
+  Helper method that actually wraps each identified location reference in
+  span tags with unique ids
+  '''
   _passage = None
   if '<' in passage:
     _passage = passage.split('<')[0]
@@ -170,6 +184,11 @@ def find_most_similar(passage, html):
       within the html
     most_similar: {str} a string that contains the passage within
       html that's most similar to the input passage
+
+  Given a passage (or snippet from a text) and the full text content (html),
+  attempt to find the region of html that the passage was derived from, first
+  using a fast Jaccard similarity calculation, then using SequenceMatcher to
+  validate the similarity
   '''
   most_similar = None
   max_sim = 0 
@@ -181,7 +200,8 @@ def find_most_similar(passage, html):
 
     # run a jaccard check before executing n**2 time on SequenceMatcher()
     if sim > .6:
-      sim = SequenceMatcher(None, passage, ' '.join(window_words)).ratio()
+      window = ' '.join(window_words)
+      sim = SequenceMatcher(None, passage, window, autojunk=False).ratio()
 
     if sim > max_sim:
       max_sim = sim
@@ -196,6 +216,8 @@ def get_jaccard_sim(seta, setb):
     setb {set} a set of strings
   @returns:
     {float} a float indicating the jaccard sim of sets a and b
+
+  Compute the Jaccard similarity between two sets (of words)
   '''
   intersection = len( seta.intersection(setb) )
   union = len( seta.union(setb) )
@@ -205,6 +227,10 @@ def get_narrative_json():
   '''
   @args: none
   @returns: d[narrativeId] = [{location json}, {location json}...]
+
+  Build up a dictionary that maps each narrative id to an array of
+  objects. Each object in that array will contain properties detailing
+  a passage from the narrative and the cartodb_id of the passage
   '''
   d = defaultdict(list)
   narrative_id_to_filename = {}
@@ -237,6 +263,8 @@ def get_carto_json(table_name):
   '''
   @args: the name of a carto table to query
   @returns: the table contents in json form
+
+  Return json with all records from a given CartoDB table name
   '''
   url = '%20'.join((carto_root + table_name).split())
   return json.loads(urllib2.urlopen(url).read())
@@ -245,6 +273,9 @@ def add_jekyll_frontmatter(_html):
   '''
   @args: an html string
   @returns: an html string with frontmatter added
+
+  Add the jekyll frontmatter to an outgoing html file to request the
+  text layout in this file's presentation
   '''
   html =  '---\n'
   html += 'layout: text\n'
@@ -266,8 +297,10 @@ if __name__ == '__main__':
     xml_file = os.path.basename(i)
     
     # only process xml files for which location data is present
+    '''
     if xml_file not in narrative_json.keys():
       continue
+    '''
 
     with open(i) as f:
       soup = BeautifulSoup( f.read(), 'lxml' )

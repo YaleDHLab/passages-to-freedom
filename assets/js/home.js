@@ -2,10 +2,10 @@
 
   if (!document.querySelector('#text-count')) return;
 
-  var metadataSqlQuery = 'SELECT * FROM table_34_reordered_data',
-      queryRoute = 'https://gravistar.carto.com/api/v2/sql?format=GeoJSON&q=';
+  var routesQuery = 'SELECT * FROM table_34_reordered_data',
+      queryPath = 'https://gravistar.carto.com/api/v2/sql?format=GeoJSON&q=';
 
-  d3.json(queryRoute + metadataSqlQuery, handleData);
+  d3.json(queryPath + routesQuery, handleData);
 
   function handleData(data) {
     var narrativeIdToPassages, none = window.passages.getNarrativeIdMappings(data);
