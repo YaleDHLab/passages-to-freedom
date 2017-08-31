@@ -6,10 +6,10 @@ process: true
 
   if (!document.querySelector('#text-count')) return;
 
-  var metadataSqlQuery = 'SELECT * FROM {{ site.carto_routes }}',
-      queryRoute = 'https://gravistar.carto.com/api/v2/sql?format=GeoJSON&q=';
+  var routesQuery = 'SELECT * FROM {{ site.carto_routes }}',
+      queryPath = 'https://gravistar.carto.com/api/v2/sql?format=GeoJSON&q=';
 
-  d3.json(queryRoute + metadataSqlQuery, handleData);
+  d3.json(queryPath + routesQuery, handleData);
 
   function handleData(data) {
     var narrativeIdToPassages, none = window.passages.getNarrativeIdMappings(data);

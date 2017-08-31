@@ -149,6 +149,8 @@ table.text-table {
   width: 100%;
   border-collapse: collapse;
   border: 2px solid #efefef;
+  opacity: 0;
+  transition: opacity .2s;
 }
 
 table.text-table img {
@@ -185,6 +187,54 @@ table.text-table td:last-child {
 table.text-table tbody {
   cursor: pointer;
 }
+
+/**
+* Loader
+*   author: @Rosa https://codepen.io/RRoberts/pen/pEXWEp
+**/
+
+.loader {
+  width: 100px;
+  height: 100px;
+  border-radius: 100%;
+  position: relative;
+  margin: 30px auto;
+  transition: opacity .2s;
+}
+
+.loader {
+  -webkit-perspective: 120px;
+  -moz-perspective: 120px;
+  -ms-perspective: 120px;
+  perspective: 120px;
+}
+
+.loader:before {
+  content: "";
+  position: absolute;
+  left: 25px;
+  top: 25px;
+  width: 50px;
+  height: 50px;
+  background-color: $light_color;
+  animation: flip 1s infinite;
+}
+
+@keyframes flip {
+  0% {
+    transform: rotate(0);
+  }
+
+  50% {
+    transform: rotateY(180deg);
+  }
+
+  100% {
+    transform: rotateY(180deg)  rotateX(180deg);
+  }
+}
+
+
 
 /**
 * Text page
@@ -514,7 +564,7 @@ path {
 * Map point states
 **/
 
-.map-point.hidden {
+.hidden {
   display: none;
   pointer-events: none;
 }
