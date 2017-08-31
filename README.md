@@ -126,11 +126,6 @@ git pull origin master
 # to check which branch you're on and see what kinds of changed and unchanged files you have
 git status
 
-# to make git ignore the ruby version file
-sublime .
-
-add '.ruby-version' to .gitignore file and hit save.
-
 # check all changes and deletions among files
 git diff
 
@@ -212,4 +207,12 @@ git checkout .
 # to add a directory and all subdirectories to the staging area 
 
 git add .
+
+# to open sublime 
+sublime .
+
+# to review history to see what you changes
+
+git log
+
 ```
