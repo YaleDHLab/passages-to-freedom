@@ -32,7 +32,7 @@ brew install wget && wget https://s3-us-west-2.amazonaws.com/lab-apps/passages-t
 tar -zxf assets/data/xml.tar.gz && mv xml assets/data/ && rm assets/data/xml.tar.gz
 
 # install python requirements
-pip install -r utils/requirements.txt
+pip install -r utils/requirements.txt --user
 
 # process xml data (python 2.7)
 python utils/convert_xml_to_html.py
